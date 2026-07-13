@@ -6,10 +6,11 @@ import (
 )
 
 const (
-	CodeCommon uint32 = 100001
-	CodeParam  uint32 = 100002
-	CodeToken  uint32 = 100003
-	CodeDB     uint32 = 100005
+	CodeCommon    uint32 = 100001
+	CodeParam     uint32 = 100002
+	CodeToken     uint32 = 100003
+	CodeForbidden uint32 = 100004
+	CodeDB        uint32 = 100005
 )
 
 type AppError struct {

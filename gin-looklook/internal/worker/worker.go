@@ -35,15 +35,16 @@ type Runtime struct {
 	repo      *repository.Repository
 	orders    *service.OrderService
 	seckill   *service.SeckillService
+	search    *service.SearchService
 	server    *asynq.Server
 	scheduler *asynq.Scheduler
 	reader    *kafka.Reader
 	writer    *kafka.Writer
 }
 
-func New(cfg config.Config, repo *repository.Repository, orders *service.OrderService, seckill *service.SeckillService, writer *kafka.Writer) *Runtime {
+func New(cfg config.Config, repo *repository.Repository, orders *service.OrderService, seckill *service.SeckillService, search *service.SearchService, writer *kafka.Writer) *Runtime {
 	redisOpt := asynq.RedisClientOpt{Addr: cfg.RedisAddr, Password: cfg.RedisPassword}
-	return &Runtime{cfg: cfg, repo: repo, orders: orders, seckill: seckill, server: asynq.NewServer(redisOpt, asynq.Config{Concurrency: 10, Queues: map[string]int{"critical": 6, "default": 3, "low": 1}}), scheduler: asynq.NewScheduler(redisOpt, &asynq.SchedulerOpts{Location: time.Local}), reader: kafka.NewReader(kafka.ReaderConfig{Brokers: cfg.KafkaBrokers, GroupID: cfg.PaymentGroup, Topic: cfg.PaymentTopic, MinBytes: 1, MaxBytes: 10e6}), writer: writer}
+	return &Runtime{cfg: cfg, repo: repo, orders: orders, seckill: seckill, search: search, server: asynq.NewServer(redisOpt, asynq.Config{Concurrency: 10, Queues: map[string]int{"critical": 6, "default": 3, "low": 1}}), scheduler: asynq.NewScheduler(redisOpt, &asynq.SchedulerOpts{Location: time.Local}), reader: kafka.NewReader(kafka.ReaderConfig{Brokers: cfg.KafkaBrokers, GroupID: cfg.PaymentGroup, Topic: cfg.PaymentTopic, MinBytes: 1, MaxBytes: 10e6}), writer: writer}
 }
 func (r *Runtime) Start(ctx context.Context) error {
 	mux := asynq.NewServeMux()
@@ -66,7 +67,46 @@ func (r *Runtime) Start(ctx context.Context) error {
 	go r.consumePayments(ctx)
 	go r.publishOutbox(ctx)
 	go r.consumeSeckill(ctx)
+	go r.publishSearchOutbox(ctx)
 	return nil
+}
+
+func (r *Runtime) publishSearchOutbox(ctx context.Context) {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			items, err := r.repo.PendingSearchOutbox(ctx, 100)
+			if err != nil {
+				slog.Error("query search outbox", "error", err)
+				continue
+			}
+			for _, item := range items {
+				if item.EventType == "delete" {
+					err = r.search.DeleteHomestay(ctx, item.AggregateID)
+				} else {
+					var homestay *model.Homestay
+					homestay, err = r.repo.HomestayForIndex(ctx, item.AggregateID)
+					if errors.Is(err, repository.ErrNotFound) {
+						err = r.search.DeleteHomestay(ctx, item.AggregateID)
+					} else if err == nil {
+						err = r.search.IndexHomestay(ctx, homestay)
+					}
+				}
+				if err != nil {
+					_ = r.repo.RetrySearchOutbox(ctx, item.ID, item.RetryCount, err)
+					slog.Error("sync search document", "outboxId", item.ID, "aggregateId", item.AggregateID, "error", err)
+					continue
+				}
+				if err = r.repo.MarkSearchOutboxPublished(ctx, item.ID); err != nil {
+					slog.Error("mark search outbox published", "outboxId", item.ID, "error", err)
+				}
+			}
+		}
+	}
 }
 
 func (r *Runtime) consumeSeckill(ctx context.Context) {

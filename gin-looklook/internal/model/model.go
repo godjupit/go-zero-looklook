@@ -54,25 +54,26 @@ type UserAuth struct {
 }
 
 type Homestay struct {
-	ID                  int64  `json:"id"`
-	Title               string `json:"title"`
-	SubTitle            string `json:"subTitle"`
-	Banner              string `json:"banner"`
-	Info                string `json:"info"`
-	City                string `json:"city"`
-	Tags                string `json:"tags"`
+	ID                  int64   `json:"id"`
+	Version             int64   `json:"version"`
+	Title               string  `json:"title"`
+	SubTitle            string  `json:"subTitle"`
+	Banner              string  `json:"banner"`
+	Info                string  `json:"info"`
+	City                string  `json:"city"`
+	Tags                string  `json:"tags"`
 	Star                float64 `json:"star"`
 	Latitude            float64 `json:"latitude"`
 	Longitude           float64 `json:"longitude"`
-	PeopleNum           int64  `json:"peopleNum"`
-	HomestayBusinessID  int64  `json:"homestayBusinessId"`
-	UserID              int64  `json:"userId"`
-	RowState            int64  `json:"rowState"`
-	RowType             int64  `json:"rowType"`
-	FoodInfo            string `json:"foodInfo"`
-	FoodPrice           int64  `json:"foodPrice"`
-	HomestayPrice       int64  `json:"homestayPrice"`
-	MarketHomestayPrice int64  `json:"marketHomestayPrice"`
+	PeopleNum           int64   `json:"peopleNum"`
+	HomestayBusinessID  int64   `json:"homestayBusinessId"`
+	UserID              int64   `json:"userId"`
+	RowState            int64   `json:"rowState"`
+	RowType             int64   `json:"rowType"`
+	FoodInfo            string  `json:"foodInfo"`
+	FoodPrice           int64   `json:"foodPrice"`
+	HomestayPrice       int64   `json:"homestayPrice"`
+	MarketHomestayPrice int64   `json:"marketHomestayPrice"`
 }
 
 type HomestayBusiness struct {
@@ -218,49 +219,49 @@ type AdminUser struct {
 }
 
 type AdminRole struct {
-	ID            int64
-	Code          string
-	Name          string
-	Status        int64
-	ScopeType     int64
-	Version       int64
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	PermissionIDs []int64
-	BusinessIDs   []int64
+	ID            int64     `json:"id"`
+	Code          string    `json:"code"`
+	Name          string    `json:"name"`
+	Status        int64     `json:"status"`
+	ScopeType     int64     `json:"scopeType"`
+	Version       int64     `json:"version"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	PermissionIDs []int64   `json:"permissionIds"`
+	BusinessIDs   []int64   `json:"businessIds"`
 }
 
 type AdminPermission struct {
-	ID        int64
-	Code      string
-	Name      string
-	Method    string
-	Path      string
-	CreatedAt time.Time
+	ID        int64     `json:"id"`
+	Code      string    `json:"code"`
+	Name      string    `json:"name"`
+	Method    string    `json:"method"`
+	Path      string    `json:"path"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type AdminAuthorization struct {
-	Permissions map[string]struct{}
+	Permissions  map[string]struct{}
 	AllData      bool
 	BusinessIDs  []int64
 	LinkedUserID int64
 }
 
 type AdminAudit struct {
-	ID             int64
-	AdminUserID    int64
-	Username       string
-	PermissionCode string
-	Method         string
-	Path           string
-	RequestID      string
-	IP             string
-	HTTPStatus     int
-	Success        bool
-	DurationMS     int64
-	RequestBody    string
-	ErrorMessage   string
-	CreatedAt      time.Time
+	ID             int64     `json:"id"`
+	AdminUserID    int64     `json:"adminUserId"`
+	Username       string    `json:"username"`
+	PermissionCode string    `json:"permissionCode"`
+	Method         string    `json:"method"`
+	Path           string    `json:"path"`
+	RequestID      string    `json:"requestId"`
+	IP             string    `json:"ip"`
+	HTTPStatus     int       `json:"httpStatus"`
+	Success        bool      `json:"success"`
+	DurationMS     int64     `json:"durationMs"`
+	RequestBody    string    `json:"requestBody"`
+	ErrorMessage   string    `json:"errorMessage"`
+	CreatedAt      time.Time `json:"createdAt"`
 }
 
 type SearchOutboxEvent struct {

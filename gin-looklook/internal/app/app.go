@@ -20,6 +20,8 @@ type App struct {
 	Orders   *service.OrderService
 	Payments *service.PaymentService
 	Seckill  *service.SeckillService
+	Admin    *service.AdminService
+	Search   *service.SearchService
 	Workers  *worker.Runtime
 	Asynq    *asynq.Client
 	Kafka    *kafka.Writer
@@ -43,7 +45,27 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		return nil, err
 	}
 	payments := service.NewPaymentService(repo, users, orders, cfg)
-	workers := worker.New(cfg, repo, orders, seckill, writer)
-	return &App{Config: cfg, Repo: repo, Users: users, Travel: travel, Orders: orders, Payments: payments, Seckill: seckill, Workers: workers, Asynq: asynqClient, Kafka: writer}, nil
+	admin := service.NewAdminService(repo, cfg)
+	if err = admin.Bootstrap(ctx); err != nil {
+		_ = writer.Close()
+		_ = asynqClient.Close()
+		repo.Close()
+		return nil, err
+	}
+	search := service.NewSearchService(repo, cfg)
+	if err = search.EnsureIndex(ctx); err != nil {
+		_ = writer.Close()
+		_ = asynqClient.Close()
+		repo.Close()
+		return nil, err
+	}
+	if err = repo.BootstrapSearchOutbox(ctx); err != nil {
+		_ = writer.Close()
+		_ = asynqClient.Close()
+		repo.Close()
+		return nil, err
+	}
+	workers := worker.New(cfg, repo, orders, seckill, search, writer)
+	return &App{Config: cfg, Repo: repo, Users: users, Travel: travel, Orders: orders, Payments: payments, Seckill: seckill, Admin: admin, Search: search, Workers: workers, Asynq: asynqClient, Kafka: writer}, nil
 }
 func (a *App) Close() { a.Workers.Stop(); _ = a.Kafka.Close(); _ = a.Asynq.Close(); a.Repo.Close() }

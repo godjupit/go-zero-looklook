@@ -157,12 +157,12 @@ func (r *Repository) CreateUser(ctx context.Context, user *model.User, auth *mod
 	return id, nil
 }
 
-const homestayFields = "id,title,sub_title,banner,info,city,tags,star,latitude,longitude,people_num,homestay_business_id,user_id,row_state,row_type,food_info,food_price,homestay_price,market_homestay_price"
-const homestayJoinFields = "h.id,h.title,h.sub_title,h.banner,h.info,h.city,h.tags,h.star,h.latitude,h.longitude,h.people_num,h.homestay_business_id,h.user_id,h.row_state,h.row_type,h.food_info,h.food_price,h.homestay_price,h.market_homestay_price"
+const homestayFields = "id,version,title,sub_title,banner,info,city,tags,star,latitude,longitude,people_num,homestay_business_id,user_id,row_state,row_type,food_info,food_price,homestay_price,market_homestay_price"
+const homestayJoinFields = "h.id,h.version,h.title,h.sub_title,h.banner,h.info,h.city,h.tags,h.star,h.latitude,h.longitude,h.people_num,h.homestay_business_id,h.user_id,h.row_state,h.row_type,h.food_info,h.food_price,h.homestay_price,h.market_homestay_price"
 
 func scanHomestay(row interface{ Scan(...any) error }) (*model.Homestay, error) {
 	var v model.Homestay
-	err := row.Scan(&v.ID, &v.Title, &v.SubTitle, &v.Banner, &v.Info, &v.City, &v.Tags, &v.Star, &v.Latitude, &v.Longitude, &v.PeopleNum, &v.HomestayBusinessID, &v.UserID, &v.RowState, &v.RowType, &v.FoodInfo, &v.FoodPrice, &v.HomestayPrice, &v.MarketHomestayPrice)
+	err := row.Scan(&v.ID, &v.Version, &v.Title, &v.SubTitle, &v.Banner, &v.Info, &v.City, &v.Tags, &v.Star, &v.Latitude, &v.Longitude, &v.PeopleNum, &v.HomestayBusinessID, &v.UserID, &v.RowState, &v.RowType, &v.FoodInfo, &v.FoodPrice, &v.HomestayPrice, &v.MarketHomestayPrice)
 	return &v, err
 }
 
